@@ -46,3 +46,8 @@ Jangan pernah menaruh service_role key di frontend.
 6. Login sebagai Admin lalu buka **Data Warga** dan **Kartu Keluarga**. CRUD sekarang menggunakan Supabase, bukan localStorage.
 
 Data NIK dan No. KK divalidasi sebagai 16 digit di database. RLS membatasi CRUD warga/KK ke Admin/Ketua RT; warga biasa hanya dapat melihat/mengubah baris warga yang tertaut ke akun mereka sendiri.
+
+## Pelayanan Surat
+- `supabase/02-pelayanan-surat.sql` menambah field pelayanan dan RLS.
+- `assets/pelayanan.js` menghubungkan pengajuan surat warga dan pemrosesan admin ke Supabase.
+- Nomor surat otomatis saat status menjadi selesai.
