@@ -4,29 +4,4 @@
 <div class="admin-user"><span>AF</span><div><b>Admin Pengurus</b><small>Super Admin</small></div><button id="logout">Keluar</button></div></aside>
 <main class="admin-main"><header><button class="hamb" id="adminHamb">☰</button><div><small id="todayLabel"></small><h1 id="pageTitle">Selamat datang, Admin! 👋</h1></div><div class="admin-tools">⌕　🔔　<span>AF</span></div></header><div id="app"></div></main>
 <div id="toast" class="toast"></div>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="../assets/config.js"></script><script src="../assets/supabase.js"></script><script src="../assets/rt-data.js"></script><script src="../assets/pelayanan.js"></script><script src="../assets/admin.js"></script><script src="../assets/pengajuan-direct-fix.js?v=20261002"></script>
-<script>
-(function(){
-  function openPengajuan(e){
-    var a=e.target.closest && e.target.closest('#adminNav a[data-page="surat"]');
-    if(!a) return;
-    e.preventDefault();
-    e.stopPropagation();
-    document.querySelectorAll('#adminNav a[data-page]').forEach(function(x){x.classList.toggle('active',x===a)});
-    var app=document.getElementById('app');
-    var title=document.getElementById('pageTitle');
-    if(title) title.textContent='Pengajuan Surat';
-    if(app) app.innerHTML='<section class="admin-card wide"><div class="card-head"><div><b>Pengajuan Surat</b><small>Memuat data pengajuan warga...</small></div></div></section>';
-    var fn=window.renderPelayananAdmin;
-    if(typeof fn==='function'){
-      Promise.resolve().then(fn).catch(function(err){
-        console.error('Pengajuan Surat:',err);
-        if(app) app.innerHTML='<section class="admin-card wide"><div class="card-head"><div><b>Pengajuan Surat gagal dibuka</b><small>'+String(err && err.message || err).replace(/[&<>"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]})+'</small></div></div></section>';
-      });
-    }else{
-      if(app) app.innerHTML='<section class="admin-card wide"><div class="card-head"><div><b>Modul belum termuat</b><small>renderPelayananAdmin tidak tersedia. Periksa assets/pelayanan.js.</small></div></div></section>';
-    }
-  }
-  document.addEventListener('click',openPengajuan,true);
-})();
-</script></body></html>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="../assets/config.js"></script><script src="../assets/supabase.js"></script><script src="../assets/rt-data.js?v=20261002"></script><script src="../assets/pelayanan.js?v=20261002"></script><script src="../assets/admin.js?v=20261002"></script><script src="../assets/pengajuan-direct-fix.js?v=20261002"></script></body></html>

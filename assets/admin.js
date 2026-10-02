@@ -41,7 +41,47 @@ function closeModal(){document.querySelector('.modal')?.remove()}
 window.closeModal=closeModal;
 
 const A={d:db(),app:document.querySelector('#app'),title:document.querySelector('#pageTitle')};
-if(!['admin','ketua_rt','super_admin'].includes(localStorage.getItem('dawung_auth'))){location.href='../login.html'}
+
+const ADMIN_ROLES=['admin','ketua_rt','super_admin'];
+
+async function ensureAdminSession(){
+  const sb=window.DAWUNG_SUPABASE;
+  if(!sb){
+    location.href='../login.html';
+    return null;
+  }
+
+  const {data:{user},error:authError}=await sb.auth.getUser();
+  if(authError || !user){
+    localStorage.removeItem('dawung_auth');
+    localStorage.removeItem('dawung_user');
+    location.href='../login.html';
+    return null;
+  }
+
+  const {data:profile,error:profileError}=await sb
+    .from('profiles')
+    .select('role,nama')
+    .eq('id',user.id)
+    .maybeSingle();
+
+  if(profileError || !profile || !ADMIN_ROLES.includes(profile.role)){
+    localStorage.removeItem('dawung_auth');
+    localStorage.removeItem('dawung_user');
+    location.href='../login.html';
+    return null;
+  }
+
+  localStorage.setItem('dawung_auth',profile.role);
+  localStorage.setItem('dawung_user',JSON.stringify({
+    id:user.id,
+    nama:profile.nama || 'Admin Pengurus',
+    email:user.email || '',
+    role:profile.role
+  }));
+
+  return {user,profile};
+}
 
 document.querySelector('#todayLabel').textContent=new Date().toLocaleDateString('id-ID',{weekday:'long',day:'2-digit',month:'long',year:'numeric'});
 document.querySelector('#logout').onclick=async()=>{try{await window.DAWUNG_SUPABASE?.auth.signOut()}catch(e){}localStorage.removeItem('dawung_auth');localStorage.removeItem('dawung_user');location.href='../login.html'};
@@ -104,4 +144,15 @@ function pengguna(){head('Pengguna & Hak Akses');const u=JSON.parse(localStorage
 function pengaturan(){head('Pengaturan');A.app.innerHTML=card(`<div class="card-head"><div><b>Identitas Portal</b><small>Perbarui identitas Dusun Dawung</small></div></div><form id="settingsForm"><label>Nama wilayah<input id="sName" value="${esc(A.d.settings.name)}"></label><div class="form-grid"><label>RT<input id="sRt" value="${esc(A.d.settings.rt)}"></label><label>RW<input id="sRw" value="${esc(A.d.settings.rw)}"></label></div><label>Slogan<input id="sSlogan" value="${esc(A.d.settings.slogan)}"></label><button type="submit" class="btn green">Simpan Pengaturan</button></form>`,'wide');document.querySelector('#settingsForm').onsubmit=e=>{e.preventDefault();A.d.settings={name:document.querySelector('#sName').value,rt:document.querySelector('#sRt').value,rw:document.querySelector('#sRw').value,slogan:document.querySelector('#sSlogan').value};save(A.d);toast('Pengaturan disimpan')}}
 
 window.addEventListener('error',e=>console.error(e.error||e.message));
-(async()=>{try{if(window.initSupabaseWarga)await window.initSupabaseWarga();else render('dashboard')}catch(e){console.error(e);render('dashboard');toast('Dashboard siap, data Supabase belum termuat: '+(e.message||e))}})();
+(async()=>{
+  const ctx=await ensureAdminSession();
+  if(!ctx) return;
+  try{
+    if(window.initSupabaseWarga) await window.initSupabaseWarga();
+    else render('dashboard');
+  }catch(e){
+    console.error(e);
+    render('dashboard');
+    toast('Dashboard siap, data Supabase belum termuat: '+(e.message||e));
+  }
+})();

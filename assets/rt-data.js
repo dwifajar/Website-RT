@@ -14,7 +14,7 @@
   function rowToLocal(w){return {id:w.id,nama:w.nama,nik:w.nik||'',kk:w.no_kk||'',alamat:w.alamat||'',status:statusMap[w.status]||w.status,profile_id:w.profile_id};}
   async function load(){
     const ok=await isAdmin();
-    if(!ok){location.href='../login.html';return;}
+    if(!ok){return false;}
     const [{data:warga,error:we},{data:kk,error:ke}]=await Promise.all([
       sb.from('warga').select('*').order('nama'),
       sb.from('kartu_keluarga').select('*').order('no_kk')
