@@ -1,0 +1,9 @@
+{
+  "name": "portal-dusun-dawung-rt04-rw01",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "serve": "python -m http.server 8080"
+  },
+  "description": "Portal digital Dusun Dawung RT 04 RW 01"
+}
