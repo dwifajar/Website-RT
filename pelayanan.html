@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pelayanan Surat — Dusun Dawung RT 04 / RW 01</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body class="warga-page">
+<main class="admin-main" style="max-width:1100px;margin:auto">
+<header>
+  <div>
+    <small>PELAYANAN PUBLIK</small>
+    <h1>Pengajuan Surat</h1>
+    <p>Dusun Dawung · RT 04 / RW 01</p>
+  </div>
+</header>
+<div id="pelayananApp"></div>
+<p style="margin:18px 0"><a href="index.html">← Kembali ke Website</a></p>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/config.js"></script>
+<script src="assets/supabase.js"></script>
+<script src="assets/pelayanan.js"></script>
+<script>
+window.addEventListener('load',()=>window.renderPelayananPublik&&window.renderPelayananPublik('#pelayananApp'));
+</script>
+</body>
+</html>
