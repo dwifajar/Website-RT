@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pengajuan Surat — Admin Dusun Dawung</title>
+<link rel="stylesheet" href="../assets/style.css">
+<style>
+.status-select{font-size:9px;padding:6px 8px;border:1px solid var(--line);border-radius:7px}
+.notice-box{padding:14px;border-radius:10px;background:#eef5f0;color:#355c45;font-size:11px;margin-bottom:14px}
+.error-box{padding:14px;border-radius:10px;background:#ffe6e3;color:#9e3f38;font-size:11px;margin-bottom:14px}
+.loading{padding:28px;text-align:center;color:var(--muted);font-size:11px}
+</style>
+</head>
+<body class="admin">
+<aside class="admin-side">
+  <a class="logo" href="../index.html"><span class="logo-mark">🌿</span><span><strong>DUSUN DAWUNG</strong><small>RT 04 / RW 01</small></span></a>
+  <nav id="adminNav">
+    <a href="./?page=dashboard">⌂ <span>Dashboard</span></a>
+    <a href="./?page=warga">♙ <span>Data Warga</span></a>
+    <a href="./?page=kk">▤ <span>Kartu Keluarga</span></a>
+    <a class="active" href="./pengajuan.html">▣ <span>Pengajuan Surat</span><b id="badgeSurat">0</b></a>
+    <a href="./?page=agenda">◷ <span>Agenda</span></a>
+    <a href="./?page=pengumuman">✦ <span>Pengumuman</span></a>
+    <a href="./?page=keuangan">Rp <span>Kas & Keuangan</span></a>
+    <a href="./?page=aspirasi">♡ <span>Aspirasi & Laporan</span><b id="badgeAspirasi">0</b></a>
+    <a href="./?page=pengguna">⚙ <span>Pengguna</span></a>
+    <a href="./?page=pengaturan">⚙ <span>Pengaturan</span></a>
+  </nav>
+  <div class="admin-user"><span>AF</span><div><b>Admin Pengurus</b><small>Super Admin</small></div><button id="logout">Keluar</button></div>
+</aside>
+
+<main class="admin-main">
+  <header>
+    <button class="hamb" id="adminHamb">☰</button>
+    <div><small id="todayLabel"></small><h1>Pengajuan Surat</h1></div>
+    <div class="admin-tools">⌕　🔔　<span>AF</span></div>
+  </header>
+
+
+  <div id="notice" class="notice-box" style="display:none"></div>
+  <div class="search">
+    <input id="qSurat" placeholder="Cari nama, NIK, jenis, nomor surat">
+    <button id="searchBtn">Cari</button>
+  </div>
+  <section class="admin-card wide">
+    <div id="suratTable" class="loading">Memuat data pengajuan...</div>
+  </section>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../assets/config.js"></script>
+<script src="../assets/supabase.js"></script>
+<script src="../assets/admin-pengajuan.js?v=20261002-sidebar-unified-v1"></script>
+</body>
+</html>
