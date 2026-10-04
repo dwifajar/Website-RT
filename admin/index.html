@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Dashboard Admin — Dusun Dawung</title>
+  <link rel="stylesheet" href="../assets/style.css?v=20261004-admin-router-final">
+</head>
+<body class="admin">
+  <aside class="admin-side">
+    <a class="logo" href="../index.html">
+      <span class="logo-mark">🌿</span>
+      <span><strong>DUSUN DAWUNG</strong><small>RT 04 / RW 01</small></span>
+    </a>
+
+    <nav id="adminNav">
+      <a href="./?page=dashboard" data-page="dashboard">⌂ <span>Dashboard</span></a>
+      <a href="./?page=warga" data-page="warga">♙ <span>Data Warga</span></a>
+      <a href="./?page=kk" data-page="kk">▤ <span>Kartu Keluarga</span></a>
+      <a href="./pengajuan.html" data-page="surat" id="menuPengajuanSurat">▣ <span>Pengajuan Surat</span><b id="badgeSurat">0</b></a>
+      <a href="./?page=agenda" data-page="agenda">◷ <span>Agenda</span></a>
+      <a href="./?page=pengumuman" data-page="pengumuman">✦ <span>Pengumuman</span></a>
+      <a href="./?page=keuangan" data-page="keuangan">Rp <span>Kas &amp; Keuangan</span></a>
+      <a href="./?page=aspirasi" data-page="aspirasi">♡ <span>Aspirasi &amp; Laporan</span><b id="badgeAspirasi">0</b></a>
+      <a href="./?page=pengguna" data-page="pengguna">⚙ <span>Pengguna</span></a>
+      <a href="./?page=pengaturan" data-page="pengaturan">⚙ <span>Pengaturan</span></a>
+    </nav>
+
+    <script>
+      // Native navigation: halaman selalu memuat route yang diminta.
+      // Tentukan highlight dari URL sebelum JS aplikasi dijalankan.
+      (function(){
+        const page=new URLSearchParams(window.location.search).get('page')||'dashboard';
+        document.querySelectorAll('#adminNav a[data-page]').forEach(function(a){
+          a.classList.toggle('active',a.dataset.page===page);
+        });
+      })();
+    </script>
+
+    <div class="admin-user">
+      <span>AF</span>
+      <div><b>Admin Pengurus</b><small>Super Admin</small></div>
+      <button id="logout" type="button">Keluar</button>
+    </div>
+  </aside>
+
+  <main class="admin-main">
+    <header>
+      <button class="hamb" id="adminHamb" type="button">☰</button>
+      <div>
+        <small id="todayLabel"></small>
+        <h1 id="pageTitle">Selamat datang, Admin! 👋</h1>
+      </div>
+      <div class="admin-tools">⌕　🔔　<span>AF</span></div>
+    </header>
+
+    <script>
+      (function(){
+        const page=new URLSearchParams(window.location.search).get('page')||'dashboard';
+        const titles={dashboard:'Selamat datang, Admin! 👋',warga:'Data Warga',kk:'Kartu Keluarga',agenda:'Agenda Kegiatan',pengumuman:'Pengumuman',keuangan:'Kas & Keuangan',aspirasi:'Aspirasi & Laporan',pengguna:'Pengguna & Hak Akses',pengaturan:'Pengaturan'};
+        const el=document.querySelector('#pageTitle');
+        if(el)el.textContent=titles[page]||'Selamat datang, Admin! 👋';
+      })();
+    </script>
+
+    <div id="app"><section class="admin-card wide"><div class="loading" style="padding:24px;text-align:center">Memuat halaman admin...</div></section></div>
+  </main>
+
+  <div id="toast" class="toast"></div>
+
+  <!-- Supabase + file aplikasi lama tetap dipakai untuk menjaga dashboard/menu lain. -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../assets/config.js?v=20261004-admin-router-final"></script>
+  <script src="../assets/supabase.js?v=20261004-admin-router-final"></script>
+  <script src="../assets/rt-data.js?v=20261004-admin-router-final"></script>
+  <script src="../assets/pelayanan.js?v=20261004-admin-router-final"></script>
+  <script src="../assets/admin.js?v=20261004-admin-router-final"></script>
+
+</body>
+</html>
