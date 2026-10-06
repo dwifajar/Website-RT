@@ -365,6 +365,20 @@
       if(error) throw error;
       if(!data||!data.length){setResult('<div class="error">Kode pengajuan tidak ditemukan. Periksa kembali kode yang Anda masukkan.</div>');return;}
       current=data[0];
+
+      // Enrich the result with the full data used by the PDF template.
+      // The public status RPC may intentionally return only summary fields,
+      // while identity/service details are stored in surat_pengajuan.data_form.
+      try{
+        const {data:pdfData,error:pdfError}=await sb.rpc('get_pengajuan_pdf',{p_kode:kode});
+        if(pdfError) throw pdfError;
+        if(pdfData && typeof pdfData==='object'){
+          current={...current,...pdfData};
+        }
+      }catch(pdfErr){
+        console.warn('[Cek Pengajuan] Detail PDF tidak termuat:',pdfErr);
+      }
+
       let qrVerified=false;
       if(expectedHash){
         try{
