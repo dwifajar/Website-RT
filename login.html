@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Masuk — Dusun Dawung</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body class="video-login-page">
+<main class="auth-shell" id="authShell">
+  <section class="auth-panel welcome-panel">
+    <div class="welcome-content">
+      <div class="welcome-emblem">🌿</div>
+      <p class="welcome-kicker">PORTAL DIGITAL WARGA</p>
+      <h1 id="welcomeTitle">Halo, Selamat Datang!</h1>
+      <p id="welcomeText">Belum memiliki akun warga?</p>
+      <button class="outline-button" id="switchMode" type="button">Daftar Warga</button>
+      <div class="welcome-foot">DUSUN DAWUNG · RT 04 / RW 01</div>
+    </div>
+  </section>
+  <section class="auth-panel forms-panel">
+    <div class="auth-form login-form active-form" id="loginPane">
+      <div class="form-heading"><span class="heading-kicker">PORTAL WARGA DAWUNG</span><h2>Login</h2><p>Silakan masuk untuk melanjutkan</p></div>
+      <div class="tabs"><button class="active" type="button" data-role="warga">Warga</button><button type="button" data-role="admin">Pengurus/Admin</button></div>
+      <form id="loginForm">
+        <label class="video-field"><span>Email / NIK</span><input id="identity" required placeholder="Masukkan email atau NIK" autocomplete="username"><span class="field-icon">♙</span></label>
+        <label class="video-field"><span>Password</span><input id="password" type="password" required placeholder="Masukkan password" autocomplete="current-password"><span class="field-icon">♙</span></label>
+        <div class="login-row"><label class="remember"><input type="checkbox" id="remember"> Ingat saya</label><a href="#" id="forgot">Lupa Password?</a></div>
+        <button class="video-submit" type="submit">Login <span>→</span></button>
+      </form>
+      <div class="social-caption">atau masuk melalui layanan sosial</div>
+      <div class="social-icons" aria-label="Layanan sosial"><span title="Google">G</span><span title="Facebook">f</span><span title="GitHub">⌘</span><span title="LinkedIn">in</span></div>
+      <a class="back-site" href="index.html">← Kembali ke Website RT</a>
+    </div>
+    <div class="auth-form register-form" id="registerPane">
+      <div class="form-heading"><span class="heading-kicker">WARGA DUSUN DAWUNG</span><h2>Registration</h2><p>Mulai akses layanan warga</p></div>
+      <form id="registerVisualForm">
+        <label class="video-field"><span>Nama Lengkap</span><input placeholder="Nama sesuai identitas" autocomplete="name"></label>
+        <label class="video-field"><span>Username</span><input placeholder="Buat username" autocomplete="username"></label>
+        <label class="video-field"><span>Email</span><input type="email" placeholder="nama@email.com" autocomplete="email"></label>
+        <label class="video-field"><span>Password</span><input type="password" placeholder="Buat password" autocomplete="new-password"></label>
+        <button class="video-submit" type="button" id="register">Ajukan Pendaftaran <span>→</span></button>
+      </form>
+      <div class="social-caption">Pendaftaran diverifikasi pengurus RT</div>
+      <button class="back-to-login" type="button" id="backLogin">Sudah punya akun? Login</button>
+    </div>
+  </section>
+</main>
+<div class="page-caption"><span>SEPI ING PAMRIH, RAME ING GAWE</span><span>PORTAL WARGA DIGITAL · DAWUNG</span></div>
+<script src="assets/login.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/config.js"></script><script src="assets/supabase.js"></script>
+<script>
+const shell=document.getElementById('authShell');
+const switchMode=document.getElementById('switchMode');
+function showRegister(){shell.classList.add('show-register');document.getElementById('welcomeTitle').textContent='Bergabung Bersama Kami';document.getElementById('welcomeText').textContent='Sudah memiliki akun warga?';switchMode.textContent='Login';}
+function showLogin(){shell.classList.remove('show-register');document.getElementById('welcomeTitle').textContent='Halo, Selamat Datang!';document.getElementById('welcomeText').textContent='Belum memiliki akun warga?';switchMode.textContent='Daftar Warga';}
+switchMode.addEventListener('click',()=>shell.classList.contains('show-register')?showLogin():showRegister());
+document.getElementById('backLogin').addEventListener('click',showLogin);
+
+</script>
+</body></html>
