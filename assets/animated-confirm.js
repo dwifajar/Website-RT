@@ -27,6 +27,7 @@
 
       const overlay = document.createElement('div');
       overlay.className = 'dw-confirm-overlay';
+      overlay.id = 'dwConfirmOverlay';
       overlay.innerHTML = `
         <section class="dw-confirm-card" role="alertdialog" aria-modal="true"
           aria-labelledby="dwConfirmTitle" aria-describedby="dwConfirmMessage" tabindex="-1">
@@ -43,7 +44,7 @@
           <h2 id="dwConfirmTitle"></h2>
           <p id="dwConfirmEntity" class="dw-confirm-entity"></p>
           <p id="dwConfirmMessage" class="dw-confirm-message"></p>
-          <div class="dw-confirm-warning"><span aria-hidden="true">!</span><span>Tindakan ini tidak dapat dibatalkan setelah data dihapus.</span></div>
+          <div class="dw-confirm-warning"><span class="dw-confirm-warning-icon" aria-hidden="true">!</span><p class="dw-confirm-warning-text">Tindakan ini tidak dapat dibatalkan setelah data dihapus.</p></div>
           <div class="dw-confirm-actions">
             <button type="button" class="dw-confirm-cancel" data-action="cancel"></button>
             <button type="button" class="dw-confirm-submit" data-action="confirm">
