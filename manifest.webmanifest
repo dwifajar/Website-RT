@@ -1,0 +1,48 @@
+{
+  "id": "/",
+  "name": "Portal Digital Dusun Dawung",
+  "short_name": "Dusun Dawung",
+  "description": "Portal layanan, informasi, kegiatan, dan aspirasi warga RT 04 / RW 01 Dusun Dawung.",
+  "lang": "id-ID",
+  "start_url": "/index.html",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": [
+    "standalone",
+    "minimal-ui"
+  ],
+  "orientation": "portrait-primary",
+  "background_color": "#F1EFFF",
+  "theme_color": "#7563DD",
+  "categories": [
+    "lifestyle",
+    "utilities"
+  ],
+  "prefer_related_applications": false,
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-maskable-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
