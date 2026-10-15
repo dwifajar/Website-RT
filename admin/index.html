@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Dashboard Admin — Dusun Dawung</title>
+  <link rel="stylesheet" href="../assets/style.css?v=20261015-admin-dashboard-compact-v4-rolefix">
+  <link rel="stylesheet" href="../assets/iuran-ui-polish.css?v=20261016-kartu-iuran-v1">
+  <link rel="stylesheet" href="../assets/admin-modal-unified.css?v=20261015-admin-modal-unified-v1">
+</head>
+<body class="admin">
+  <aside class="admin-side">
+    <a class="logo" href="../index.html">
+      <span class="logo-mark">🌿</span>
+      <span><strong>DUSUN DAWUNG</strong><small>RT 04 / RW 01</small></span>
+    </a>
+
+    <nav id="adminNav">
+      <a href="./?page=dashboard" data-page="dashboard">⌂ <span>Dashboard</span></a>
+      <a href="./?page=warga" data-page="warga">♙ <span>Data Warga</span></a>
+      <a href="./?page=kk" data-page="kk">▤ <span>Kartu Keluarga</span></a>
+      <a href="./pengajuan.html" data-page="surat" id="menuPengajuanSurat">▣ <span>Pengajuan Surat</span></a>
+      <a href="./?page=agenda" data-page="agenda">◷ <span>Agenda</span></a>
+      <a href="./?page=pengumuman" data-page="pengumuman">✦ <span>Pengumuman</span></a>
+      <a href="./?page=keuangan" data-page="keuangan">Rp <span>Kas &amp; Keuangan</span></a>
+      <a href="./?page=wilayah-iuran" data-page="wilayah-iuran">♧ <span>Wilayah Iuran</span></a>
+      <a href="./?page=aspirasi" data-page="aspirasi">♡ <span>Aspirasi &amp; Laporan</span></a>
+      <a href="./?page=galeri" data-page="galeri">▧ <span>Galeri Warga</span></a>
+      <a href="./?page=pengguna" data-page="pengguna">⚙ <span>Pengguna &amp; Admin</span></a>
+      <a href="./?page=pengaturan" data-page="pengaturan">⚙ <span>Pengaturan</span></a>
+    </nav>
+
+    <script>
+      // Native navigation: halaman selalu memuat route yang diminta.
+      // Tentukan highlight dari URL sebelum JS aplikasi dijalankan.
+      (function(){
+        const page=new URLSearchParams(window.location.search).get('page')||'dashboard';
+        document.querySelectorAll('#adminNav a[data-page]').forEach(function(a){
+          a.classList.toggle('active',a.dataset.page===page);
+        });
+      })();
+    </script>
+
+    <div class="admin-user" aria-label="Akun admin">
+      <button id="logout" class="logout-premium" type="button" aria-label="Keluar dari akun">
+        <span class="logout-label">Keluar</span>
+        <span class="logout-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M10 5H5.8A1.8 1.8 0 0 0 4 6.8v10.4A1.8 1.8 0 0 0 5.8 19H10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M13 8l4 4-4 4M8 12h9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+      </button>
+    </div>
+  </aside>
+
+  <main class="admin-main">
+    <header>
+      <button class="hamb" id="adminHamb" type="button">☰</button>
+      <div>
+        <small id="todayLabel"></small>
+        <h1 id="pageTitle">Dashboard</h1>
+      </div>
+      <div class="admin-tools">
+        <span class="admin-search" aria-hidden="true">⌕</span>
+        <div class="admin-notify-wrap">
+          <button class="admin-notify-btn" id="notificationBell" type="button" aria-label="Notifikasi" aria-expanded="false" aria-controls="notificationPanel">
+            <span class="admin-bell" aria-hidden="true">🔔</span>
+            <b class="admin-notify-count" id="notificationBadge" hidden>0</b>
+          </button>
+          <div class="admin-notify-panel" id="notificationPanel" hidden>
+            <div class="admin-notify-head"><strong>Notifikasi</strong><button type="button" id="notificationClose" aria-label="Tutup">×</button></div>
+            <div id="notificationList"><div class="admin-notify-empty">Memuat notifikasi...</div></div>
+          </div>
+        </div>
+        <span id="adminRoleAvatar" aria-label="Peran admin">AD</span>
+      </div>
+    </header>
+
+
+    <div id="app"></div>
+  </main>
+
+  <div id="toast" class="toast"></div>
+
+  <!-- Supabase + file aplikasi lama tetap dipakai untuk menjaga dashboard/menu lain. -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../assets/config.js?v=20261004-admin-router-final"></script>
+  <script src="../assets/supabase.js?v=20261004-admin-router-final"></script>
+  <script src="../assets/premium-toast.js?v=20261013-premium-v1"></script>
+  <script src="../assets/animated-confirm.js?v=20261012-confirm-neon-v2"></script>
+  <script src="../assets/rt-data.js?v=20261015-warga-management-v1"></script>
+  <script src="../assets/pelayanan.js?v=20261004-admin-router-final"></script>
+  <script src="../assets/admin-notifications.js?v=20261004-admin-notify-v2"></script>
+  <script src="../assets/admin-gallery.js?v=20261014-video-gallery-v1"></script>
+  <script src="../assets/admin-iuran-wilayah.js?v=20261016-kartu-iuran-v1"></script>
+  <script src="../assets/admin.js?v=20261015-iuran-wilayah-v2-rolefix"></script>
+  <script src="../assets/delete-animation.js?v=20261012-neon-v1"></script>
+
+  <script src="../assets/edit-animation.js?v=20261012-edit-neon-v1"></script>
+</body>
+</html>
