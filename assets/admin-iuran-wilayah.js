@@ -1,0 +1,191 @@
+/* Admin UI: wilayah, petugas, and household collection boxes for voluntary dues. */
+(function(){
+  const sb=()=>window.DAWUNG_SUPABASE;
+  const escHtml=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  async function currentUser(){const {data,error}=await sb().auth.getUser();if(error)throw error;if(!data.user)throw new Error('Sesi login berakhir. Silakan login kembali.');return data.user;}
+  async function loadData(){
+    const [wr,staff,assignedW,assignedP,houseRes,houseKkRes,user,cardRes]=await Promise.all([
+      sb().from('iuran_wilayah').select('*').order('nama'),
+      sb().from('profiles').select('id,nama,email,role').eq('role','petugas_iuran').order('nama'),
+      sb().from('warga_iuran_wilayah').select('warga_id,wilayah_id'),
+      sb().from('iuran_petugas_wilayah').select('petugas_id,wilayah_id,aktif'),
+      sb().from('iuran_rumah').select('*').order('kode_rumah'),
+      sb().from('iuran_rumah_kk').select('kk_id,rumah_id'),
+      currentUser(),
+      sb().rpc('admin_list_iuran_kartu')
+    ]);
+    for(const r of [wr,staff,assignedW,assignedP,houseRes,houseKkRes])if(r.error)throw r.error;
+    if(cardRes.error)console.warn('[Kartu iuran] Status kartu belum tersedia; jalankan migrasi 08.',cardRes.error.message);
+    return {regions:wr.data||[],staff:staff.data||[],assignW:assignedW.data||[],assignP:assignedP.data||[],houses:houseRes.data||[],houseKks:houseKkRes.data||[],cards:cardRes.error?[]:(cardRes.data||[]),kks:window.__DAWUNG_KK||A.d.kk||[],user};
+  }
+  window.renderIuranWilayah=async function(){
+    head('Pengaturan Wilayah Iuran');
+    A.app.innerHTML=card('<div class="card-head"><div><b>Pengaturan Wilayah Iuran</b><small>Memuat wilayah, petugas, rumah, dan kotak iuran…</small></div></div>','wide');
+    try{
+      const d=await loadData();
+      const warga=(A.d.warga||[]).filter(x=>String(x.status||'').toLowerCase()==='aktif');
+      const assignedIds=new Set(d.assignW.map(x=>String(x.warga_id)));
+      const unassigned=warga.filter(x=>!assignedIds.has(String(x.id))).length;
+      const staffMap=new Map(d.assignP.filter(x=>x.aktif).map(x=>[String(x.petugas_id),String(x.wilayah_id)]));
+      const kkById=new Map(d.kks.map(k=>[String(k.id),k]));
+      const rumahKkCount=new Map();d.houseKks.forEach(x=>rumahKkCount.set(String(x.rumah_id),(rumahKkCount.get(String(x.rumah_id))||0)+1));
+      const cardByHouse=new Map((d.cards||[]).map(x=>[String(x.rumah_id),x]));
+      const regionRows=d.regions.map(r=>{
+        const count=d.assignW.filter(x=>String(x.wilayah_id)===String(r.id)).length;
+        const houses=d.houses.filter(x=>String(x.wilayah_id)===String(r.id));
+        const staffNames=d.staff.filter(p=>staffMap.get(String(p.id))===String(r.id)).map(p=>p.nama||p.email||p.id);
+        return `<tr><td><b>${escHtml(r.nama)}</b><small>${escHtml(r.keterangan||'')}</small></td><td>${count} warga</td><td><b>${houses.length} rumah</b></td><td>${staffNames.length?staffNames.map(escHtml).join(', '):'<span class="yellow">Belum ada petugas</span>'}</td><td><span class="p ${r.aktif?'greenp':'redp'}">${r.aktif?'Aktif':'Nonaktif'}</span></td><td><div class="user-row-actions"><button type="button" data-iuran-warga="${r.id}">Atur Warga</button><button type="button" data-iuran-staff="${r.id}">Atur Petugas</button><button type="button" data-iuran-new-house="${r.id}">＋ Rumah</button><button type="button" data-iuran-edit="${r.id}">Edit</button></div></td></tr>`;
+      }).join('');
+      const houseRows=d.houses.map(h=>{
+        const region=d.regions.find(r=>String(r.id)===String(h.wilayah_id));
+        const kkCount=rumahKkCount.get(String(h.id))||0;
+        const linked=d.houseKks.filter(x=>String(x.rumah_id)===String(h.id)).map(x=>kkById.get(String(x.kk_id))).filter(Boolean);
+        const visibleNames=linked.slice(0,2).map(k=>k.kepala_keluarga||k.no_kk).filter(Boolean);
+        const summary=visibleNames.join(' · ')+(linked.length>2?` +${linked.length-2} lainnya`:'');
+        const card=cardByHouse.get(String(h.id));
+        return `<tr><td><div class="iuran-house-name-cell"><b>${escHtml(h.kode_rumah)}</b><span>${escHtml(h.nama_rumah)}</span><small class="iuran-card-status ${card?.akses_aktif?'is-issued':''}">${card?.akses_aktif?'Kartu digital aktif':'Kartu digital belum dibuat'}</small></div></td><td><div class="iuran-house-address-cell">${escHtml(h.alamat||'Alamat belum diisi')}</div></td><td><span class="iuran-region-chip">${escHtml(region?.nama||'Wilayah tidak ditemukan')}</span></td><td><div class="iuran-kk-summary"><b>${kkCount} KK tertaut</b><small>${escHtml(summary||'Belum ditautkan ke KK')}</small></div></td><td><span class="p ${h.aktif?'greenp':'redp'}">${h.aktif?'Aktif':'Nonaktif'}</span></td><td><div class="iuran-house-actions"><button type="button" class="iuran-house-edit" data-house-edit="${h.id}">Edit / Atur KK</button><button type="button" class="iuran-house-card-action" data-house-card="${h.id}">${card?.akses_aktif?'Reset Kartu':'Buat Kartu'}</button><button type="button" class="iuran-house-toggle" data-house-toggle="${h.id}">${h.aktif?'Nonaktifkan':'Aktifkan'}</button></div></td></tr>`;
+      }).join('');
+      const houseTable=`<div class="table-scroll iuran-house-table-scroll"><table class="wide-table iuran-house-table"><colgroup><col style="width:16%"><col style="width:18%"><col style="width:11%"><col style="width:19%"><col style="width:8%"><col style="width:28%"></colgroup><thead><tr><th>Rumah / Kotak</th><th>Alamat</th><th>Wilayah</th><th>KK Tertaut</th><th>Status</th><th>Aksi</th></tr></thead><tbody>${houseRows||`<tr class="iuran-house-empty-row"><td colspan="6"><div class="iuran-house-empty-state"><span class="iuran-house-empty-icon">⌂</span><div><b>Belum ada rumah atau kotak iuran</b><p>Daftarkan rumah terlebih dahulu. Setelah itu, pilih wilayah dan tautkan satu atau beberapa KK yang menggunakan kotak iuran bersama.</p></div></div></td></tr>`}</tbody></table></div><div class="iuran-house-table-note"><span class="iuran-house-note-icon">i</span><p><b>Catatan pencatatan</b><br>Setiap transaksi akan dicatat atas rumah/kotak iuran. Orang yang menyerahkan uang boleh berbeda, tetapi seluruh setoran tetap masuk ke riwayat rumah yang sama.</p></div>`;
+      A.app.innerHTML=`<div class="admin-kpis"><div><span>♙</span><small>Warga aktif</small><b>${warga.length}</b></div><div><span>✓</span><small>Warga sudah dibagi wilayah</small><b>${warga.length-unassigned}</b></div><div><span>⌂</span><small>Rumah/kotak terdaftar</small><b>${d.houses.length}</b></div><div><span>!</span><small>Belum dibagi wilayah (warga)</small><b>${unassigned}</b></div></div>`+
+        card(`<div class="card-head"><div><b>Wilayah Penarikan</b><small>Wilayah mengelompokkan petugas serta rumah/kotak iuran.</small></div><button type="button" class="green-mini" id="addIuranRegion">＋ Tambah Wilayah</button></div>${table(regionRows,['Nama Wilayah','Warga lama','Rumah/Kotak','Petugas','Status','Aksi'])}`,'wide')+
+        card(`<div class="card-head iuran-house-card-head"><div><b>Rumah / Kotak Iuran</b><small>Satu rumah/kotak memiliki satu riwayat setoran gabungan, walaupun penghuninya terdiri dari beberapa KK.</small></div><button type="button" class="green-mini" id="addIuranHouse">＋ Tambah Rumah/Kotak</button></div>${houseTable}`,'wide iuran-house-card')+
+        card(`<div class="card-head"><div><b>Petunjuk Pengaturan</b><small>Ikuti langkah berikut untuk menyiapkan pencatatan iuran.</small></div></div><div class="iuran-guide-steps"><div class="iuran-guide-step"><span>1</span><div><b>Buat wilayah</b><p>Buat kelompok wilayah sesuai pembagian di lingkungan RT.</p></div></div><div class="iuran-guide-step"><span>2</span><div><b>Tetapkan petugas</b><p>Pilih petugas yang bertanggung jawab pada setiap wilayah.</p></div></div><div class="iuran-guide-step"><span>3</span><div><b>Daftarkan rumah</b><p>Tambah rumah/kotak, pilih wilayah, lalu tautkan semua KK yang berbagi kotak tersebut.</p></div></div></div><div class="iuran-guide-footnote">Penugasan warga lama tetap disimpan untuk menjaga riwayat transaksi sebelumnya. Aplikasi petugas menggunakan daftar Rumah/Kotak Iuran.</div>`,'wide iuran-guide-card');
+      document.querySelector('#addIuranRegion').onclick=()=>regionModal(null);
+      document.querySelector('#addIuranHouse').onclick=()=>houseModal(null,null);
+      document.querySelectorAll('[data-iuran-warga]').forEach(b=>b.onclick=()=>assignWargaModal(b.dataset.iuranWarga));
+      document.querySelectorAll('[data-iuran-staff]').forEach(b=>b.onclick=()=>assignStaffModal(b.dataset.iuranStaff));
+      document.querySelectorAll('[data-iuran-new-house]').forEach(b=>b.onclick=()=>houseModal(null,b.dataset.iuranNewHouse));
+      document.querySelectorAll('[data-iuran-edit]').forEach(b=>b.onclick=()=>regionModal(d.regions.find(r=>String(r.id)===b.dataset.iuranEdit)));
+      document.querySelectorAll('[data-house-edit]').forEach(b=>b.onclick=()=>houseModal(d.houses.find(h=>String(h.id)===b.dataset.houseEdit),null));
+      document.querySelectorAll('[data-house-toggle]').forEach(b=>b.onclick=()=>toggleHouse(d.houses.find(h=>String(h.id)===b.dataset.houseToggle)));
+      document.querySelectorAll('[data-house-card]').forEach(b=>b.onclick=()=>issueHouseCard(d.houses.find(h=>String(h.id)===b.dataset.houseCard),cardByHouse.get(String(b.dataset.houseCard))));
+    }catch(e){console.error('[Wilayah iuran]',e);A.app.innerHTML=card(`<div class="card-head"><div><b>Pengaturan Wilayah Iuran</b><small>Gagal memuat data.</small></div></div><p>${escHtml(e.message||e)}</p><p>Pastikan SQL 05, 06, 07, dan 08 sudah dijalankan pada project Supabase Website RT, lalu muat ulang halaman.</p><button type="button" class="green-mini" id="retryIuranRegions">Coba Lagi</button>`,'wide');document.querySelector('#retryIuranRegions')?.addEventListener('click',()=>window.renderIuranWilayah());}
+  };
+  function regionModal(existing){
+    modal(existing?'Edit Wilayah Iuran':'Tambah Wilayah Iuran',`<label>Nama wilayah<input id="iuranRegionName" maxlength="80" required value="${escHtml(existing?.nama||'')}" placeholder="Contoh: Wilayah A"></label><label>Keterangan (opsional)<textarea id="iuranRegionDesc" maxlength="250" rows="3" placeholder="Batas wilayah atau catatan">${escHtml(existing?.keterangan||'')}</textarea></label><label>Status<select id="iuranRegionActive"><option value="true" ${existing?.aktif!==false?'selected':''}>Aktif</option><option value="false" ${existing?.aktif===false?'selected':''}>Nonaktif</option></select></label>`,async()=>{
+      const nama=document.querySelector('#iuranRegionName').value.trim(),keterangan=document.querySelector('#iuranRegionDesc').value.trim()||null,aktif=document.querySelector('#iuranRegionActive').value==='true';if(!nama){toast('Nama wilayah wajib diisi.');return;}
+      const btn=document.querySelector('#modalSave');if(btn){btn.disabled=true;btn.textContent='Menyimpan…';}
+      try{const user=await currentUser();const payload={nama,keterangan,aktif};let res=existing?await sb().from('iuran_wilayah').update(payload).eq('id',existing.id):await sb().from('iuran_wilayah').insert({...payload,dibuat_oleh:user.id});if(res.error)throw res.error;closeModal();toast(existing?'Wilayah berhasil diperbarui.':'Wilayah berhasil ditambahkan.');await window.renderIuranWilayah();}
+      catch(e){toast('Gagal menyimpan wilayah: '+(e.message||e));}finally{if(btn?.isConnected){btn.disabled=false;btn.textContent='Simpan';}}
+    });
+  }
+  async function assignWargaModal(regionId){
+    try{const d=await loadData(),region=d.regions.find(r=>String(r.id)===String(regionId));if(!region)throw new Error('Wilayah tidak ditemukan.');
+      const warga=(A.d.warga||[]).filter(x=>String(x.status||'').toLowerCase()==='aktif');const assignment=new Map(d.assignW.map(x=>[String(x.warga_id),String(x.wilayah_id)]));
+      const rows=warga.map(w=>{const current=assignment.get(String(w.id));const checked=current===String(regionId);const elsewhere=current&&current!==String(regionId);return `<label class="iuran-check-row"><input type="checkbox" name="iuranWargaPick" value="${escHtml(w.id)}" ${checked?'checked':''}><span><b>${escHtml(w.nama)}</b><small>${escHtml(w.alamat||'Alamat belum diisi')}${elsewhere?' · Saat ini di wilayah lain':''}</small></span></label>`;}).join('');
+      modal('Atur Warga — '+region.nama,`<p>Pembagian warga ini dipertahankan untuk data/riwayat lama. Untuk transaksi baru, atur rumah/kotak di bagian Rumah / Kotak Iuran.</p><label>Cari warga<input id="iuranWargaSearch" placeholder="Ketik nama atau alamat"></label><div class="iuran-check-list" id="iuranWargaList">${rows||'<p>Belum ada warga aktif.</p>'}</div>`,async()=>{
+        const selected=[...document.querySelectorAll('input[name="iuranWargaPick"]:checked')].map(x=>x.value);const currentHere=d.assignW.filter(x=>String(x.wilayah_id)===String(regionId)).map(x=>String(x.warga_id));const remove=currentHere.filter(id=>!selected.includes(id));const user=await currentUser();const btn=document.querySelector('#modalSave');if(btn){btn.disabled=true;btn.textContent='Menyimpan…';}
+        try{if(selected.length){const payload=selected.map(warga_id=>({warga_id,wilayah_id:regionId,diperbarui_oleh:user.id}));const res=await sb().from('warga_iuran_wilayah').upsert(payload,{onConflict:'warga_id'});if(res.error)throw res.error;}if(remove.length){const res=await sb().from('warga_iuran_wilayah').delete().eq('wilayah_id',regionId).in('warga_id',remove);if(res.error)throw res.error;}closeModal();toast('Pembagian warga lama berhasil diperbarui.');await window.renderIuranWilayah();}
+        catch(e){toast('Gagal menyimpan pembagian warga: '+(e.message||e));}finally{if(btn?.isConnected){btn.disabled=false;btn.textContent='Simpan';}}
+      });
+      const search=document.querySelector('#iuranWargaSearch');search?.addEventListener('input',()=>{const q=search.value.toLowerCase();document.querySelectorAll('#iuranWargaList .iuran-check-row').forEach(row=>row.hidden=!row.textContent.toLowerCase().includes(q));});
+    }catch(e){toast('Gagal membuka daftar warga: '+(e.message||e));}
+  }
+  async function assignStaffModal(regionId){
+    try{const d=await loadData(),region=d.regions.find(r=>String(r.id)===String(regionId));if(!region)throw new Error('Wilayah tidak ditemukan.');
+      const assigned=new Map(d.assignP.filter(x=>x.aktif).map(x=>[String(x.petugas_id),String(x.wilayah_id)]));
+      const rows=d.staff.map(p=>{const current=assigned.get(String(p.id));const checked=current===String(regionId);const elsewhere=current&&current!==String(regionId);return `<label class="iuran-check-row"><input type="checkbox" name="iuranPetugasPick" value="${escHtml(p.id)}" ${checked?'checked':''}><span><b>${escHtml(p.nama||'Tanpa nama')}</b><small>${escHtml(p.email||'')}${elsewhere?' · Saat ini di wilayah lain':''}</small></span></label>`;}).join('');
+      modal('Atur Petugas — '+region.nama,`<p>Pilih akun dengan role <b>Petugas Iuran</b>. Setiap petugas hanya dapat memiliki satu wilayah aktif. Memilih petugas dari wilayah lain akan memindahkan penugasannya.</p><div class="iuran-check-list">${rows||'<p>Belum ada akun dengan role Petugas Iuran. Buat akun melalui Supabase Authentication, lalu ubah role melalui Pengguna & Admin.</p>'}</div>`,async()=>{
+        const selected=[...document.querySelectorAll('input[name="iuranPetugasPick"]:checked')].map(x=>x.value);const currentHere=d.assignP.filter(x=>String(x.wilayah_id)===String(regionId)).map(x=>String(x.petugas_id));const remove=currentHere.filter(id=>!selected.includes(id));const user=await currentUser();const btn=document.querySelector('#modalSave');if(btn){btn.disabled=true;btn.textContent='Menyimpan…';}
+        try{if(selected.length){const payload=selected.map(petugas_id=>({petugas_id,wilayah_id:regionId,aktif:true,ditetapkan_oleh:user.id}));const res=await sb().from('iuran_petugas_wilayah').upsert(payload,{onConflict:'petugas_id'});if(res.error)throw res.error;}if(remove.length){const res=await sb().from('iuran_petugas_wilayah').delete().eq('wilayah_id',regionId).in('petugas_id',remove);if(res.error)throw res.error;}closeModal();toast('Penugasan petugas berhasil disimpan.');await window.renderIuranWilayah();}
+        catch(e){toast('Gagal menyimpan petugas: '+(e.message||e));}finally{if(btn?.isConnected){btn.disabled=false;btn.textContent='Simpan';}}
+      });
+    }catch(e){toast('Gagal membuka daftar petugas: '+(e.message||e));}
+  }
+  async function houseModal(existing,defaultRegionId){
+    try{
+      const d=await loadData();
+      if(!d.regions.length)throw new Error('Buat wilayah terlebih dahulu sebelum menambah rumah/kotak.');
+      const kks=d.kks||[];const ownLinks=d.houseKks.filter(x=>String(x.rumah_id)===String(existing?.id));
+      const currentByKk=new Map(d.houseKks.map(x=>[String(x.kk_id),String(x.rumah_id)]));
+      const houseById=new Map(d.houses.map(h=>[String(h.id),h]));
+      const selectedKkIds=new Set(ownLinks.map(x=>String(x.kk_id)));
+      const kkRows=kks.map(k=>{
+        const currentHomeId=currentByKk.get(String(k.id));const currentHouse=currentHomeId?houseById.get(currentHomeId):null;
+        const checked=selectedKkIds.has(String(k.id));const elsewhere=currentHomeId&&currentHomeId!==String(existing?.id);
+        return `<label class="iuran-check-row"><input type="checkbox" name="iuranHouseKkPick" value="${escHtml(k.id)}" ${checked?'checked':''}><span class="iuran-check-copy"><b>${escHtml(k.kepala_keluarga||'Kepala keluarga belum diisi')}</b><small>No. KK: ${escHtml(k.no_kk||'—')} · ${escHtml(k.alamat||'Alamat belum diisi')}${elsewhere?` <em>Sudah tertaut: ${escHtml(currentHouse?.kode_rumah||currentHouse?.nama_rumah||'rumah lain')}</em>`:''}</small></span></label>`;
+      }).join('');
+      const regionOptions=d.regions.map(r=>`<option value="${escHtml(r.id)}" ${String(existing?.wilayah_id||defaultRegionId||'')===String(r.id)?'selected':''}>${escHtml(r.nama)}${r.aktif?'':' (Nonaktif)'}</option>`).join('');
+      const initiallySelected=selectedKkIds.size;
+      const body=`<div class="iuran-house-form"><div class="iuran-house-intro"><span class="iuran-house-intro-icon">⌂</span><div><b>Satu rumah, satu riwayat setoran</b><p>Satu kotak iuran dapat digunakan beberapa KK. Pilih semua KK yang tinggal di rumah ini agar setoran tercatat dalam satu riwayat gabungan.</p></div></div><div class="iuran-house-fields"><label class="iuran-house-field">Nama / label rumah <em>Wajib</em><input id="iuranHouseName" maxlength="120" required value="${escHtml(existing?.nama_rumah||'')}" placeholder="Contoh: Rumah Pak Andi"></label><label class="iuran-house-field">Alamat / penanda rumah <em>Wajib</em><input id="iuranHouseAddress" maxlength="250" required value="${escHtml(existing?.alamat||'Dusun Dawung')}" placeholder="Contoh: Gang Melati, rumah nomor 3"></label><label class="iuran-house-field">Wilayah penarikan <em>Wajib</em><select id="iuranHouseRegion" required>${regionOptions}</select></label><label class="iuran-house-field">Status rumah<select id="iuranHouseActive"><option value="true" ${existing?.aktif!==false?'selected':''}>Aktif</option><option value="false" ${existing?.aktif===false?'selected':''}>Nonaktif</option></select></label><label class="iuran-house-field iuran-field-full">Catatan lokasi <span>(opsional)</span><textarea id="iuranHouseNote" maxlength="300" rows="2" placeholder="Petunjuk lokasi agar mudah ditemukan petugas">${escHtml(existing?.catatan||'')}</textarea></label></div><section class="iuran-house-kk-section"><div class="iuran-house-section-head"><div><b>Tautkan Kartu Keluarga</b><p>Pilih seluruh KK yang memakai kotak iuran di rumah ini. KK yang sudah tertaut ke rumah lain akan dipindahkan setelah Anda mengonfirmasi penyimpanan.</p></div><span class="iuran-kk-total">${kks.length} KK tersedia</span></div><div class="iuran-house-kk-tools"><label class="iuran-house-search-label"><span>Cari keluarga</span><input id="iuranHouseKkSearch" placeholder="Nama kepala keluarga, No. KK, atau alamat"></label><span class="iuran-kk-selected-count" id="iuranHouseKkSelectedCount">${initiallySelected} dipilih</span></div><div class="iuran-check-list iuran-house-kk-list" id="iuranHouseKkList">${kkRows||'<div class="iuran-house-no-kk"><b>Belum ada data Kartu Keluarga</b><p>Tambahkan data KK terlebih dahulu. Anda tetap bisa menyimpan rumah dan menautkan KK nanti.</p></div>'}</div><div class="iuran-house-kk-footnote">Tips: tidak perlu memilih orang yang menyerahkan uang. Cukup tautkan KK yang menggunakan kotak iuran rumah ini.</div></section></div>`;
+      modal(existing?'Edit Rumah / Kotak Iuran':'Tambah Rumah / Kotak Iuran',body,async()=>{
+        const nama_rumah=document.querySelector('#iuranHouseName').value.trim();const alamat=document.querySelector('#iuranHouseAddress').value.trim();const wilayah_id=document.querySelector('#iuranHouseRegion').value;const catatan=document.querySelector('#iuranHouseNote').value.trim()||null;const aktif=document.querySelector('#iuranHouseActive').value==='true';
+        if(!nama_rumah||!alamat||!wilayah_id){toast('Nama rumah, alamat, dan wilayah wajib diisi.');return;}
+        const selected=[...document.querySelectorAll('input[name="iuranHouseKkPick"]:checked')].map(x=>x.value);
+        const moving=selected.filter(id=>{const prev=currentByKk.get(String(id));return prev&&prev!==String(existing?.id)});
+        if(moving.length&&!window.confirm(`${moving.length} KK sudah ditautkan ke rumah/kotak lain. Jika diteruskan, KK tersebut akan dipindahkan ke rumah ini. Lanjutkan?`))return;
+        const btn=document.querySelector('#modalSave');if(btn){btn.disabled=true;btn.textContent='Menyimpan…';}
+        try{
+          const user=await currentUser();const payload={nama_rumah,alamat,wilayah_id,catatan,aktif};
+          let result;
+          if(existing)result=await sb().from('iuran_rumah').update(payload).eq('id',existing.id).select('*').single();
+          else result=await sb().from('iuran_rumah').insert({...payload,dibuat_oleh:user.id}).select('*').single();
+          if(result.error)throw result.error;const house=result.data;
+          const currentHouseKks=d.houseKks.filter(x=>String(x.rumah_id)===String(house.id)).map(x=>String(x.kk_id));const remove=currentHouseKks.filter(id=>!selected.includes(id));
+          if(remove.length){const res=await sb().from('iuran_rumah_kk').delete().eq('rumah_id',house.id).in('kk_id',remove);if(res.error)throw new Error('Rumah tersimpan, tetapi pelepasan tautan KK gagal: '+res.error.message);}
+          if(selected.length){const relation=selected.map(kk_id=>({kk_id,rumah_id:house.id,ditetapkan_oleh:user.id}));const res=await sb().from('iuran_rumah_kk').upsert(relation,{onConflict:'kk_id'});if(res.error)throw new Error('Rumah tersimpan, tetapi penautan KK gagal: '+res.error.message);}
+          closeModal();toast(existing?'Rumah/kotak berhasil diperbarui.':'Rumah/kotak berhasil ditambahkan.');await window.renderIuranWilayah();
+        }catch(e){toast('Gagal menyimpan rumah/kotak: '+(e.message||e));}
+        finally{if(btn?.isConnected){btn.disabled=false;btn.textContent='Simpan';}}
+      });
+      document.querySelector('.modal')?.classList.add('iuran-house-modal-overlay');
+      document.querySelector('.modal-box')?.classList.add('iuran-house-modal');
+      document.querySelector('.modal-body')?.classList.add('iuran-house-modal-body');
+      const updateSelectedCount=()=>{const count=document.querySelectorAll('input[name="iuranHouseKkPick"]:checked').length;const output=document.querySelector('#iuranHouseKkSelectedCount');if(output)output.textContent=`${count} dipilih`;};
+      document.querySelectorAll('input[name="iuranHouseKkPick"]').forEach(input=>input.addEventListener('change',updateSelectedCount));
+      document.querySelector('#iuranHouseKkSearch')?.addEventListener('input',()=>{const search=document.querySelector('#iuranHouseKkSearch');const q=search.value.toLocaleLowerCase('id-ID');document.querySelectorAll('#iuranHouseKkList .iuran-check-row').forEach(row=>row.hidden=!row.textContent.toLocaleLowerCase('id-ID').includes(q));});
+    }catch(e){toast('Gagal membuka form rumah/kotak: '+(e.message||e));}
+  }
+  async function issueHouseCard(house,cardState){
+    if(!house)return;
+    if(!house.aktif){toast('Aktifkan rumah/kotak sebelum membuat kartu digital.');return;}
+    const resetting=!!cardState?.akses_aktif;
+    if(resetting&&!window.confirm('Reset kartu akan membuat kode QR dan PIN baru. Kartu lama langsung tidak berlaku. Lanjutkan?'))return;
+    let issued=false;
+    try{
+      const btn=document.querySelector(`[data-house-card="${house.id}"]`);if(btn){btn.disabled=true;btn.textContent='Membuat…';}
+      const {data,error}=await sb().rpc('admin_issue_iuran_kartu',{p_rumah_id:house.id});
+      if(error)throw error;
+      if(!data?.ok||!data.kode_akses||!data.pin)throw new Error('Respons penerbitan kartu tidak lengkap.');
+      issued=true;
+      await showHouseCardIssued(data);
+      await window.renderIuranWilayah();
+    }catch(e){console.error('[Kartu iuran]',e);toast('Gagal membuat kartu: '+(e.message||e)+'. Pastikan SQL 08-iuran-kartu-rumah.sql sudah dijalankan.');}
+    finally{const current=document.querySelector(`[data-house-card="${house.id}"]`);if(current){current.disabled=false;current.textContent=issued||resetting?'Reset Kartu':'Buat Kartu';}}
+  }
+  function ensureQrLibrary(){
+    if(window.QRCode?.toCanvas)return Promise.resolve();
+    return new Promise((resolve,reject)=>{
+      const existing=document.querySelector('script[data-iuran-qrcode]');
+      if(existing){if(existing.dataset.loaded==='true'&&window.QRCode?.toCanvas){resolve();return;}existing.addEventListener('load',()=>window.QRCode?.toCanvas?resolve():reject(new Error('Library QR tidak tersedia.')),{once:true});existing.addEventListener('error',()=>reject(new Error('Library QR gagal dimuat.')),{once:true});return;}
+      const script=document.createElement('script');script.src='https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js';script.dataset.iuranQrcode='1';script.onload=()=>{script.dataset.loaded='true';window.QRCode?.toCanvas?resolve():reject(new Error('Library QR tidak tersedia.'));};script.onerror=()=>reject(new Error('Library QR gagal dimuat.'));document.head.appendChild(script);
+    });
+  }
+  async function showHouseCardIssued(data){
+    const publicUrl=new URL('/iuran-saya.html?k='+encodeURIComponent(data.kode_akses),window.location.origin).href;
+    const body=`<div class="iuran-issued-card"><div class="iuran-issued-note"><b>PIN hanya ditampilkan sekarang</b><p>Catat dan serahkan PIN secara pribadi. PIN lama tidak bisa dilihat kembali. Jika hilang, admin harus membuat kartu baru.</p></div><div class="iuran-issued-preview"><div class="iuran-issued-brand">KARTU IURAN DIGITAL</div><b>${escHtml(data.nama_rumah||'Rumah/Kotak Iuran')}</b><span>${escHtml(data.alamat||'')}</span><div class="iuran-issued-qr"><canvas id="iuranResidentQr" aria-label="QR kartu iuran"></canvas><small id="iuranQrMessage">Menyiapkan QR…</small></div><div class="iuran-issued-meta"><span>Kode rumah</span><b>${escHtml(data.kode_rumah||'')}</b><span>Kode kartu</span><b class="iuran-mono-code">${escHtml(data.kode_akses||'')}</b></div></div><div class="iuran-issued-pin"><span>PIN pribadi keluarga</span><b>${escHtml(data.pin||'')}</b></div><p class="iuran-issued-url">Alamat halaman: <a href="${escHtml(publicUrl)}" target="_blank" rel="noopener">${escHtml(publicUrl)}</a></p><div class="iuran-issued-actions"><button type="button" id="iuranPrintPin" class="iuran-issued-secondary">Cetak slip PIN terpisah</button><button type="button" id="iuranCopyLink" class="iuran-issued-secondary">Salin tautan</button></div></div>`;
+    modal('Kartu Iuran Digital — '+(data.nama_rumah||data.kode_rumah),body,()=>printResidentCard(data,publicUrl));
+    const overlay=document.querySelector('.modal');overlay?.classList.add('iuran-house-modal-overlay');document.querySelector('.modal-box')?.classList.add('iuran-house-modal');document.querySelector('.modal-body')?.classList.add('iuran-house-modal-body');
+    const save=document.querySelector('#modalSave');if(save)save.textContent='Cetak Kartu (tanpa PIN)';
+    const cancel=document.querySelector('#modalCancel');if(cancel)cancel.textContent='Tutup';
+    const qrCanvas=document.querySelector('#iuranResidentQr');
+    try{await ensureQrLibrary();await window.QRCode.toCanvas(qrCanvas,publicUrl,{width:176,margin:1,errorCorrectionLevel:'M',color:{dark:'#23384d',light:'#ffffff'}});const msg=document.querySelector('#iuranQrMessage');if(msg)msg.textContent='Pindai QR untuk membuka halaman Iuran Saya.';}
+    catch(e){const msg=document.querySelector('#iuranQrMessage');if(msg)msg.textContent='QR gagal dibuat. Gunakan tautan di bawah atau coba ulang saat online.';console.warn(e);}
+    document.querySelector('#iuranPrintPin')?.addEventListener('click',()=>printPinSlip(data));
+    document.querySelector('#iuranCopyLink')?.addEventListener('click',async()=>{try{await navigator.clipboard.writeText(publicUrl);toast('Tautan halaman iuran berhasil disalin.');}catch(e){const ta=document.createElement('textarea');ta.value=publicUrl;document.body.appendChild(ta);ta.select();const ok=document.execCommand('copy');ta.remove();toast(ok?'Tautan berhasil disalin.':'Salin tautan secara manual dari alamat yang ditampilkan.');}});
+  }
+  function printDocument(title,contents){
+    const win=window.open('','_blank','width=760,height=900');
+    if(!win){toast('Popup cetak diblokir browser. Izinkan popup untuk mencetak kartu.');return;}
+    win.document.open();win.document.write(`<!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${escHtml(title)}</title><style>body{font-family:Arial,sans-serif;color:#233044;margin:32px}.card{max-width:520px;border:1px solid #d7deea;border-radius:18px;padding:26px;margin:auto;text-align:center}.brand{font-size:12px;letter-spacing:1.4px;color:#5365a7;font-weight:800}.name{font-size:22px;margin:12px 0 4px}.muted{font-size:12px;color:#65718a;line-height:1.5}.qr{display:block;margin:18px auto;width:190px;height:190px;object-fit:contain}.code{font-family:monospace;font-size:16px;letter-spacing:1px;word-break:break-all;background:#f5f7fb;padding:12px;border-radius:8px}.pin{font-size:28px;letter-spacing:4px;font-weight:800;margin:12px 0}.warning{font-size:12px;color:#875d1b;background:#fff6df;padding:10px;border-radius:8px;margin-top:16px}@media print{body{margin:8mm}.card{break-inside:avoid}}</style></head><body>${contents}<script>window.onload=()=>setTimeout(()=>window.print(),250)<\/script></body></html>`);win.document.close();
+  }
+  function printResidentCard(data,publicUrl){
+    const canvas=document.querySelector('#iuranResidentQr');let qr='';try{qr=canvas?.toDataURL('image/png')||'';}catch(e){}
+    const qrMarkup=qr?`<img class="qr" src="${qr}" alt="QR kartu iuran">`:`<div class="muted" style="border:1px dashed #cbd3e3;padding:18px;border-radius:8px">QR tidak tersedia pada saat cetak. Gunakan tautan dan kode kartu di bawah ini.</div>`;
+    printDocument('Kartu Iuran Digital',`<article class="card"><div class="brand">KARTU IURAN DIGITAL · DUSUN DAWUNG RT.04 RW.01</div><div class="name">${escHtml(data.nama_rumah||'Rumah/Kotak Iuran')}</div><div class="muted">${escHtml(data.alamat||'')}</div>${qrMarkup}<div class="muted">Kode rumah: <b>${escHtml(data.kode_rumah||'')}</b></div><div class="muted" style="margin-top:6px">Kode kartu: <span class="code">${escHtml(data.kode_akses||'')}</span></div><div class="muted" style="margin-top:16px">Pindai QR, kemudian masukkan PIN pribadi. Simpan PIN terpisah dari kartu.</div><div class="muted" style="margin-top:10px;word-break:break-all">${escHtml(publicUrl)}</div></article>`);
+  }
+  function printPinSlip(data){
+    printDocument('Slip PIN Iuran',`<article class="card"><div class="brand">SLIP PIN PRIBADI · JANGAN DISEBARKAN</div><div class="name">${escHtml(data.nama_rumah||'Rumah/Kotak Iuran')}</div><div class="muted">${escHtml(data.alamat||'')}</div><div class="muted" style="margin-top:22px">PIN pribadi keluarga</div><div class="pin">${escHtml(data.pin||'')}</div><div class="muted">PIN ini untuk membuka riwayat iuran rumah. Simpan terpisah dari kartu QR.</div><div class="warning">Jangan kirim foto slip ini ke grup umum. Jika hilang, minta admin menerbitkan kartu baru.</div></article>`);
+  }
+  async function toggleHouse(house){if(!house)return;try{const {error}=await sb().from('iuran_rumah').update({aktif:!house.aktif}).eq('id',house.id);if(error)throw error;toast(house.aktif?'Rumah/kotak dinonaktifkan.':'Rumah/kotak diaktifkan.');await window.renderIuranWilayah();}catch(e){toast('Gagal mengubah status rumah: '+(e.message||e));}}
+})();
