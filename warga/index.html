@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#7563DD">
+  <title>Portal Warga — Dusun Dawung</title>
+  <link rel="manifest" href="../manifest.webmanifest">
+  <link rel="stylesheet" href="../assets/style.css?v=20261015-warga-surat-layout-v3">
+</head>
+<body class="admin warga-page">
+  <aside class="admin-side" id="wargaSidebar">
+    <a class="logo" href="../index.html" aria-label="Kembali ke portal utama">
+      <span class="logo-mark">🌿</span>
+      <span><strong>DUSUN DAWUNG</strong><small>RT 04 / RW 01</small></span>
+    </a>
+    <div class="warga-side-label">RUANG WARGA</div>
+    <nav id="wargaNav" aria-label="Menu warga">
+      <a class="active" href="#beranda" data-page="beranda"><span class="warga-nav-icon">⌂</span><span>Beranda</span></a>
+      <a href="#surat" data-page="surat"><span class="warga-nav-icon">▤</span><span>Pengajuan Surat</span></a>
+      <a href="#aspirasi" data-page="aspirasi"><span class="warga-nav-icon">♡</span><span>Aspirasi &amp; Laporan</span></a>
+      <a href="#agenda" data-page="agenda"><span class="warga-nav-icon">◷</span><span>Agenda &amp; Informasi</span></a>
+      <a href="#notifikasi" data-page="notifikasi"><span class="warga-nav-icon">♧</span><span>Notifikasi</span><span class="warga-nav-count" id="wargaUnreadCount" hidden>0</span></a>
+      <a href="#profil" data-page="profil"><span class="warga-nav-icon">♙</span><span>Profil Saya</span></a>
+    </nav>
+    <div class="admin-user warga-sidebar-user">
+      <span id="wargaSidebarAvatar">DW</span>
+      <div class="warga-side-identity"><b id="wargaSidebarName">Memuat akun…</b><small>Warga RT 04 / RW 01</small></div>
+      <button class="logout-premium" id="logoutWarga" type="button" aria-label="Keluar dari akun">
+        <span class="logout-label">Keluar</span>
+        <span class="logout-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/><path d="M12 3h6a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-6"/></svg></span>
+      </button>
+    </div>
+  </aside>
+
+  <main class="admin-main warga-main">
+    <header class="warga-header">
+      <button class="hamb" id="wargaHamb" type="button" aria-label="Buka menu">☰</button>
+      <div class="warga-heading-copy">
+        <small id="wargaEyebrow">PORTAL WARGA</small>
+        <h1 id="wargaPageTitle">Halo, Warga 👋</h1>
+        <p id="wargaPageSubtitle">Selamat datang di ruang layanan pribadi Anda.</p>
+      </div>
+      <div class="admin-tools warga-header-tools">
+        <button id="wargaHeaderNotifications" class="warga-bell" type="button" aria-label="Buka notifikasi" title="Notifikasi"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg><i id="wargaBellDot" hidden></i></button>
+        <span id="wargaHeaderAvatar">DW</span>
+      </div>
+    </header>
+    <div id="wargaApp" aria-live="polite">
+      <section class="admin-card warga-loading"><span class="warga-spinner"></span><b>Menyiapkan ruang warga…</b><small>Memuat data akun dan layanan.</small></section>
+    </div>
+  </main>
+  <div class="warga-sidebar-backdrop" id="wargaSidebarBackdrop" hidden></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../assets/config.js"></script>
+  <script src="../assets/supabase.js"></script>
+  <script src="../assets/premium-toast.js"></script>
+  <script src="../assets/warga.js?v=20261015-warga-surat-layout-v3"></script>
+</body>
+</html>
