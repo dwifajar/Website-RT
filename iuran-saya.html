@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <meta name="theme-color" content="#687ce8">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <title>Iuran Saya — Dusun Dawung RT.04 RW.01</title>
+  <link rel="stylesheet" href="./assets/iuran-saya.css?v=20261016-iuran-saya-v1">
+</head>
+<body>
+  <main class="resident-shell">
+    <header class="resident-header">
+      <div class="resident-brand-icon" aria-hidden="true">⌂</div>
+      <div><span class="eyebrow">PORTAL WARGA</span><h1>Iuran Saya</h1><p>Dusun Dawung RT.04 RW.01</p></div>
+    </header>
+
+    <section class="access-card" aria-labelledby="accessHeading">
+      <div class="section-heading"><span class="section-icon" aria-hidden="true">✓</span><div><h2 id="accessHeading">Lihat riwayat iuran rumah</h2><p>Pindai QR pada Kartu Iuran Digital, lalu masukkan PIN pribadi yang diberikan admin.</p></div></div>
+      <form id="iuranAccessForm" novalidate>
+        <label for="iuranAccessCode">Kode pada kartu</label>
+        <input id="iuranAccessCode" name="code" type="text" inputmode="text" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="32" placeholder="Contoh: 8F3A…" required>
+        <label for="iuranAccessPin">PIN pribadi (8 digit)</label>
+        <div class="pin-field"><input id="iuranAccessPin" name="pin" type="password" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{8}" minlength="8" maxlength="8" placeholder="Masukkan 8 digit PIN" required><button id="togglePin" class="pin-toggle" type="button" aria-label="Tampilkan PIN">Lihat</button></div>
+        <button id="iuranAccessSubmit" class="primary-button" type="submit"><span aria-hidden="true">⌕</span> Lihat Iuran Saya</button>
+        <p id="iuranAccessMessage" class="form-message" role="status" aria-live="polite"></p>
+      </form>
+      <div class="privacy-note"><span aria-hidden="true">🔒</span><p>Data hanya ditampilkan setelah kode kartu dan PIN cocok. Jangan membagikan PIN ke grup umum. Jika PIN hilang, minta bantuan admin RT.</p></div>
+    </section>
+
+    <section id="iuranResult" class="result-section" hidden aria-live="polite">
+      <div class="house-title-card"><div class="house-avatar" aria-hidden="true">⌂</div><div><span class="eyebrow">KARTU IURAN RUMAH</span><h2 id="resultHouseName">Rumah/Kotak Iuran</h2><p id="resultHouseAddress"></p><span id="resultHouseCode" class="house-code"></span></div></div>
+      <div class="summary-grid">
+        <article class="summary-card total-card"><span>Total seluruh iuran</span><strong id="totalAll">Rp0</strong><small>Seluruh riwayat tersimpan</small></article>
+        <article class="summary-card"><span>Bulan ini</span><strong id="totalMonth">Rp0</strong><small id="currentMonthLabel">Bulan berjalan</small></article>
+        <article class="summary-card"><span>Tahun ini</span><strong id="totalYear">Rp0</strong><small id="currentYearLabel">Tahun berjalan</small></article>
+        <article class="summary-card"><span>Jumlah transaksi</span><strong id="totalCount">0</strong><small>Setoran tercatat</small></article>
+      </div>
+      <article class="history-card">
+        <div class="history-heading"><div><h2>Riwayat setoran</h2><p>Nominal berdasarkan uang yang benar-benar diterima petugas.</p></div><button id="hideResult" class="secondary-button" type="button">Tutup data</button></div>
+        <div class="history-table-wrap"><table><thead><tr><th>Tanggal</th><th>Dicatat oleh</th><th>Catatan</th><th class="amount-cell">Nominal</th></tr></thead><tbody id="iuranTransactions"><tr><td colspan="4">Memuat riwayat…</td></tr></tbody></table></div>
+        <p id="historyLimitNote" class="history-footnote" hidden></p>
+      </article>
+      <p class="result-footer">Ada setoran yang belum muncul atau nominalnya tidak sesuai? Hubungi bendahara RT untuk pemeriksaan dan koreksi.</p>
+    </section>
+    <footer class="resident-footer">Layanan informasi iuran sukarela · Dusun Dawung RT.04 RW.01</footer>
+  </main>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./assets/config.js?v=20261016-iuran-saya-v1"></script>
+  <script src="./assets/iuran-saya.js?v=20261016-iuran-saya-v1"></script>
+</body>
+</html>
