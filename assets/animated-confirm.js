@@ -6,6 +6,10 @@
 
   let current = null;
 
+  function svgRefresh() {
+    return '<svg class="dw-confirm-trash" viewBox="0 0 48 48" aria-hidden="true"><path d="M38 17A15 15 0 0 0 11 13L8 17m0-9v9h9M10 31a15 15 0 0 0 27 4l3-4m0 9v-9h-9" /></svg>';
+  }
+
   function svgTrash() {
     return '<svg class="dw-confirm-trash" viewBox="0 0 48 48" aria-hidden="true">' +
       '<path class="dw-confirm-lid" d="M13 14h22M19 14V10h10v4M20 19v15M28 19v15" />' +
@@ -21,6 +25,9 @@
     const confirmText = String(opts.confirmText || 'Ya, hapus');
     const cancelText = String(opts.cancelText || 'Batal');
     const entity = String(opts.entity || 'Data yang dipilih');
+    const warningText = String(opts.warningText || 'Tindakan ini tidak dapat dibatalkan setelah data dihapus.');
+    const eyebrow = String(opts.eyebrow || 'KONFIRMASI TINDAKAN');
+    const iconMarkup = opts.icon === 'refresh' ? svgRefresh() : svgTrash();
 
     return new Promise((resolve) => {
       if (current && typeof current.close === 'function') current.close(false, true);
@@ -32,11 +39,11 @@
         <section class="dw-confirm-card" role="alertdialog" aria-modal="true"
           aria-labelledby="dwConfirmTitle" aria-describedby="dwConfirmMessage" tabindex="-1">
           <button type="button" class="dw-confirm-x" data-action="cancel" aria-label="Tutup dialog">×</button>
-          <div class="dw-confirm-topline"><span class="dw-confirm-live-dot"></span> KONFIRMASI TINDAKAN</div>
+          <div class="dw-confirm-topline"><span class="dw-confirm-live-dot"></span> <span class="dw-confirm-eyebrow"></span></div>
           <div class="dw-confirm-icon-wrap">
             <span class="dw-confirm-ring dw-confirm-ring-one"></span>
             <span class="dw-confirm-ring dw-confirm-ring-two"></span>
-            <div class="dw-confirm-icon">${svgTrash()}</div>
+            <div class="dw-confirm-icon">${iconMarkup}</div>
             <i class="dw-confirm-particle dw-confirm-particle-a"></i>
             <i class="dw-confirm-particle dw-confirm-particle-b"></i>
             <i class="dw-confirm-particle dw-confirm-particle-c"></i>
@@ -44,7 +51,7 @@
           <h2 id="dwConfirmTitle"></h2>
           <p id="dwConfirmEntity" class="dw-confirm-entity"></p>
           <p id="dwConfirmMessage" class="dw-confirm-message"></p>
-          <div class="dw-confirm-warning"><span class="dw-confirm-warning-icon" aria-hidden="true">!</span><p class="dw-confirm-warning-text">Tindakan ini tidak dapat dibatalkan setelah data dihapus.</p></div>
+          <div class="dw-confirm-warning"><span class="dw-confirm-warning-icon" aria-hidden="true">!</span><p class="dw-confirm-warning-text"></p></div>
           <div class="dw-confirm-actions">
             <button type="button" class="dw-confirm-cancel" data-action="cancel"></button>
             <button type="button" class="dw-confirm-submit" data-action="confirm">
@@ -57,6 +64,8 @@
       const card = overlay.querySelector('.dw-confirm-card');
       const cancelButton = overlay.querySelector('.dw-confirm-cancel');
       const confirmButton = overlay.querySelector('.dw-confirm-submit');
+      overlay.querySelector('.dw-confirm-eyebrow').textContent = eyebrow;
+      overlay.querySelector('.dw-confirm-warning-text').textContent = warningText;
       overlay.querySelector('#dwConfirmTitle').textContent = title;
       overlay.querySelector('#dwConfirmEntity').textContent = entity;
       overlay.querySelector('#dwConfirmMessage').textContent = message;
