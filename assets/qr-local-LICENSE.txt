@@ -1,0 +1,9 @@
+QR CODE GENERATOR ATTRIBUTION
+
+The QR matrix implementation bundled in qr-local.js is derived from the QRCode for JavaScript implementation by Kazuhiko Arase, as vendored by qrcode-terminal.
+
+Copyright (c) 2009 Kazuhiko Arase.
+The QRCode source identifies itself as licensed under the MIT license:
+http://www.opensource.org/licenses/mit-license.php
+
+The surrounding qrcode-terminal package is distributed under Apache License 2.0. The local adapter in qr-local.js is a small browser wrapper that exposes SVG/canvas output and avoids an external CDN dependency.
